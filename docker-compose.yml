@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # 后端服务
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lite-pam-backend
+    restart: always
+    environment:
+      # [已移除 APP_MASTER_KEY] 现在密钥由金库口令派生，不再依赖环境变量
+      - PORT=8080
+    volumes:
+      # [持久化] 将数据库文件挂载到宿主机，防止重启丢失数据
+      - ./data/db:/app/data
+      # 如果需要同步服务器时间
+      - /etc/localtime:/etc/localtime:ro
+    # 后端不需要对外暴露端口，只通过内部网络给 Nginx 访问
+    # ports:
+    #   - "8080:8080" 
+
+    # 前端服务 (Nginx)
+  frontend:
+    build:
+      context: ./lite-pam-ui
+      dockerfile: Dockerfile
+    container_name: lite-pam-frontend
+    restart: always
+    ports:
+      # 对外暴露的端口 (生产环境建议只暴露 443)
+      - "80:80"
+    depends_on:
+      - backend
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+
+# 自动创建网络
+networks:
+  default:
+    driver: bridge
