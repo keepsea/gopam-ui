@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../Modal';
 import { api } from '../../services/api';
-import { User, Plus, ShieldAlert, Edit2, Trash2, KeyRound, Save } from 'lucide-react';
+import { User, Plus, ShieldAlert, Edit2, Trash2, KeyRound, Save, ShieldOff } from 'lucide-react';
 import type { DeviceGroup } from '../../types';
 
 interface Props {
@@ -15,7 +15,7 @@ interface UserItem {
     Role: string;
     RealName: string;
     ContactInfo: string;
-    TotpSecret: string;
+    TOTPSecret: string; // [修复] 修正为 TOTPSecret 以匹配后端 Go 结构体的 JSON 输出
     ManagedGroupID?: number;
     CreatedAt: string;
 }
@@ -96,6 +96,16 @@ export default function UserManagementModal({ isOpen, onClose }: Props) {
         } catch (err: any) { alert(err.message); }
     };
 
+    // 重置 MFA 处理函数
+    const handleResetMFA = async (id: number) => {
+        if (!confirm("确定要重置该用户的 MFA 吗？用户下次登录时将不再需要动态码，需重新绑定。")) return;
+        try {
+            await api.adminResetMFA(id);
+            alert("MFA 重置成功");
+            loadUsers(); // 刷新列表状态
+        } catch (err: any) { alert(err.message); }
+    };
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="用户与权限管理 (超级管理员)" maxWidth="max-w-5xl">
             {view === 'LIST' ? (
@@ -116,7 +126,7 @@ export default function UserManagementModal({ isOpen, onClose }: Props) {
                                     <th className="p-3">账号</th>
                                     <th className="p-3">姓名/联系方式</th>
                                     <th className="p-3">角色</th>
-                                    <th className="p-3">MFA</th>
+                                    <th className="p-3">MFA状态</th>
                                     <th className="p-3">管辖组</th>
                                     <th className="p-3 text-right">操作</th>
                                 </tr>
@@ -137,7 +147,8 @@ export default function UserManagementModal({ isOpen, onClose }: Props) {
                                             </span>
                                         </td>
                                         <td className="p-3">
-                                            {u.TotpSecret === 'BOUND' ?
+                                            {/* [修复] 使用 TOTPSecret */}
+                                            {u.TOTPSecret === 'BOUND' ?
                                                 <span className="text-green-600 text-xs bg-green-50 px-2 py-0.5 rounded border border-green-200">已启用</span> :
                                                 <span className="text-gray-400 text-xs">未绑定</span>
                                             }
@@ -146,6 +157,12 @@ export default function UserManagementModal({ isOpen, onClose }: Props) {
                                         <td className="p-3 text-right flex justify-end gap-2">
                                             <button onClick={() => openEdit(u)} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="编辑"><Edit2 size={14} /></button>
                                             <button onClick={() => handleResetPwd(u.ID)} className="p-1 text-orange-600 hover:bg-orange-50 rounded" title="重置密码"><KeyRound size={14} /></button>
+
+                                            {/* [修复] 使用 TOTPSecret */}
+                                            {u.TOTPSecret === 'BOUND' && (
+                                                <button onClick={() => handleResetMFA(u.ID)} className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="重置 MFA (解绑)"><ShieldOff size={14} /></button>
+                                            )}
+
                                             <button onClick={() => handleDelete(u.ID)} className="p-1 text-red-600 hover:bg-red-50 rounded" title="删除"><Trash2 size={14} /></button>
                                         </td>
                                     </tr>

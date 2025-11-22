@@ -246,11 +246,9 @@ export default function Dashboard() {
                             <Lock size={16} className="text-slate-600" /> 修改密码
                         </button>
 
-                        {(role === 'ADMIN' || role === 'SUPER_ADMIN') && (
-                            <button onClick={() => setModals({ ...modals, setupMFA: true })} className="flex items-center gap-2 text-sm bg-white px-3 py-1.5 rounded border border-gray-200 shadow-sm hover:border-purple-300 text-slate-700 transition-colors">
-                                <Settings size={16} className="text-purple-600" /> 设置 MFA
-                            </button>
-                        )}
+                        <button onClick={() => setModals({ ...modals, setupMFA: true })} className="flex items-center gap-2 text-sm bg-white px-3 py-1.5 rounded border border-gray-200 shadow-sm hover:border-purple-300 text-slate-700 transition-colors">
+                            <Settings size={16} className="text-purple-600" /> 设置 MFA
+                        </button>
                     </div>
                 </div>
 
